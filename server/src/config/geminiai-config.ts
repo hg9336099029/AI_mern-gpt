@@ -1,9 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const configureGeminiAI = () => {
-  if (!process.env.GEMINI_API_KEY) {
+/**
+ * Configures and initializes the Google Generative AI instance.
+ * 
+ * @throws {Error} If the GEMINI_API_KEY environment variable is not defined.
+ * @returns {GoogleGenerativeAI} An instance of the Google Generative AI client.
+ */
+export const configureGeminiAI = (): GoogleGenerativeAI => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not defined");
   }
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  
+  // Instantiate the Google Generative AI client with the provided API key
+  const genAI = new GoogleGenerativeAI(apiKey);
   return genAI;
 };

@@ -1,3 +1,4 @@
+import { Router } from "express";
 import { body, validationResult } from "express-validator";
 export const validate = (validations) => {
     return async (req, res, next) => {
@@ -11,7 +12,8 @@ export const validate = (validations) => {
         if (errors.isEmpty()) {
             return next();
         }
-        return res.status(422).json({ errors: errors.array() });
+        res.status(422).json({ errors: errors.array() });
+        return;
     };
 };
 export const loginValidator = [
@@ -19,13 +21,28 @@ export const loginValidator = [
     body("password")
         .trim()
         .isLength({ min: 6 })
-        .withMessage("Password should contain atleast 6 characters"),
+        .withMessage("Password should contain at least 6 characters"),
 ];
 export const signupValidator = [
     body("name").notEmpty().withMessage("Name is required"),
     ...loginValidator,
 ];
 export const chatCompletionValidator = [
-    body("message").notEmpty().withMessage("Message  is required"),
+    body("message").notEmpty().withMessage("Message is required"),
 ];
+// Example middleware function
+export const getAllUsers = async (req, res, next) => {
+    try {
+        // Replace the following line with your logic to get users
+        const users = [{ id: 1, name: "John Doe" }];
+        return res.status(200).json(users);
+    }
+    catch (error) {
+        next(error); // Pass error to error-handling middleware
+    }
+};
+// Setting up the router
+const router = Router();
+router.get("/users", getAllUsers); // Attach the getAllUsers middleware
+export default router;
 //# sourceMappingURL=validators.js.map

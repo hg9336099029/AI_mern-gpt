@@ -4,30 +4,38 @@ import { hash, compare } from "bcrypt";
 import { createToken } from "../utils/token-manager.js";
 import { COOKIE_NAME } from "../utils/constants.js";
 
-export const getAllUsers = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+export const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    //get all users
+    // Get all users
     const users = await User.find();
-    return res.status(200).json({ message: "OK", users });
-  } catch (error) {
+    res.status(200).json({ message: "OK", users });
+  } catch (error: unknown) {
     console.log(error);
-    return res.status(200).json({ message: "ERROR", cause: (error as Error).message });
+    res.status(200).json({ message: "ERROR", cause: (error as Error).message });
   }
 };
-
-export const userSignup = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+export const userSignup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    //user signup
+    // User signup
     const { name, email, password } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(401).send("User already registered");
+      res.status(401).send("User already registered");
+      return;
     }
     const hashedPassword = await hash(password, 10);
-    const user = new User({ name, email, password: hashedPassword });
+    const user: any = new User({ name, email, password: hashedPassword });
     await user.save();
 
-    // create token and store cookie
+    // Create token and store in cookie
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
       domain: "localhost",
@@ -46,30 +54,33 @@ export const userSignup = async (req: Request, res: Response, next: NextFunction
       signed: true,
     });
 
-    return res
-      .status(201)
-      .json({ message: "OK", name: user.name, email: user.email });
-  } catch (error) {
-    console.log(error);
-    return res.status(200).json({ message: "ERROR", cause: (error as Error).message });
+    res.status(201).json({ message: "OK", name: user.name, email: user.email });
+  } catch (error: unknown) {
+    console.error(error);
+    res.status(500).json({ message: "ERROR", cause: (error as Error).message });
   }
 };
 
-export const userLogin = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+export const userLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    //user login
+    // User login
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user: any = await User.findOne({ email });
     if (!user) {
-      return res.status(401).send("User not registered");
+      res.status(401).send("User not registered");
+      return;
     }
     const isPasswordCorrect = await compare(password, user.password);
     if (!isPasswordCorrect) {
-      return res.status(403).send("Incorrect Password");
+      res.status(403).send("Incorrect Password");
+      return;
     }
-
-    // create token and store cookie
-
+    
+    // Create token and store in cookie
     res.clearCookie(COOKIE_NAME, {
       httpOnly: true,
       domain: "localhost",
@@ -88,43 +99,51 @@ export const userLogin = async (req: Request, res: Response, next: NextFunction)
       signed: true,
     });
 
-    return res
-      .status(200)
-      .json({ message: "OK", name: user.name, email: user.email });
-  } catch (error) {
-    console.log(error);
-    return res.status(200).json({ message: "ERROR", cause: (error as Error).message });
+    res.status(200).json({ message: "OK", name: user.name, email: user.email });
+  } catch (error: unknown) {
+    console.error(error);
+    res.status(500).json({ message: "ERROR", cause: (error as Error).message });
   }
 };
 
-export const verifyUser =  async (req: Request, res: Response, next: NextFunction): Promise<void | Response> =>{
+export const verifyUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    //user token check
-    const user = await User.findById(res.locals.jwtData.id);
+    // User token check
+    const user: any = await User.findById(res.locals.jwtData.id);
     if (!user) {
-      return res.status(401).send("User not registered OR Token malfunctioned");
+      res.status(401).send("User not registered OR Token malfunctioned");
+      return;
     }
-    if (user._id.toString() !== res.locals.jwtData.id) {
-      return res.status(401).send("Permissions didn't match");
+    if ((user as any)._id.toString() !== res.locals.jwtData.id) {
+      res.status(401).send("Permissions didn't match");
+      return;
     }
-    return res
-      .status(200)
-      .json({ message: "OK", name: user.name, email: user.email });
-  } catch (error) {
-    console.log(error);
-    return res.status(200).json({ message: "ERROR", cause: (error as Error).message });
+    res.status(200).json({ message: "OK", name: user.name, email: user.email });
+  } catch (error: unknown) {
+    console.error(error);
+    res.status(500).json({ message: "ERROR", cause: (error as Error).message });
   }
 };
 
-export const userLogout =  async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
+export const userLogout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    //user token check
+    // User logout
     const user = await User.findById(res.locals.jwtData.id);
     if (!user) {
-      return res.status(401).send("User not registered OR Token malfunctioned");
+      res.status(401).send("User not registered OR Token malfunctioned");
+      return;
     }
-    if (user._id.toString() !== res.locals.jwtData.id) {
-      return res.status(401).send("Permissions didn't match");
+    if ((user as any)._id.toString() !== res.locals.jwtData.id) {
+      res.status(401).send("Permissions didn't match");
+      return;
     }
 
     res.clearCookie(COOKIE_NAME, {
@@ -134,11 +153,10 @@ export const userLogout =  async (req: Request, res: Response, next: NextFunctio
       path: "/",
     });
 
-    return res
-      .status(200)
-      .json({ message: "OK", name: user.name, email: user.email });
-  } catch (error) {
-    console.log(error);
-    return res.status(200).json({ message: "ERROR", cause: (error as Error).message });
+    res.status(200).json({ message: "OK", name: user.name, email: user.email });
+  } catch (error: unknown) {
+    console.error(error);
+    res.status(500).json({ message: "ERROR", cause: (error as Error).message });
   }
 };
+
