@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { COOKIE_NAME } from "./constants.js";
 import { promises } from "dns";
 
@@ -9,7 +9,7 @@ export const createToken = (id: string, email: string, expiresIn: string): strin
     throw new Error("JWT_SECRET is not defined");
   }
   const token = jwt.sign(payload, process.env.JWT_SECRET, {
-    expiresIn,
+    expiresIn: expiresIn as SignOptions['expiresIn'],
   });
   return token;
 };
