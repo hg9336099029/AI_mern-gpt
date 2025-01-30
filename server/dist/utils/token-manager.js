@@ -6,7 +6,7 @@ export const createToken = (id, email, expiresIn) => {
         throw new Error("JWT_SECRET is not defined");
     }
     const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn,
+        expiresIn: expiresIn,
     });
     return token;
 };
